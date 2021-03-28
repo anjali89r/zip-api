@@ -1,0 +1,154 @@
+# NOTE: update this with your service name
+service: zipservice
+
+# Create an optimized package for our functions
+package:
+  individually: true
+
+plugins:
+  - serverless-bundle # Package our functions with Webpack
+  - serverless-offline
+  - serverless-dynamodb-local
+  - serverless-domain-manager
+custom:
+  stage: ${opt:stage, self:provider.stage}
+  dynamodb:
+    stages:
+        - ${self:provider.stage}
+    start:
+      port: 8000
+      inMemory: true
+      migrate: true
+    # migration:
+    #   dir: offline/migrations
+  serverless-offline:
+    port: 4000
+  domains:
+    prod: api.ekatvacollections.com
+    staging: staging-api.ekatvacollections.com
+    dev: dev-api.ekatvacollections.com
+  customDomain:
+    domainName: "${self:custom.domains.${self:custom.stage}}"
+    basePath: shipping
+    stage: "${self:custom.stage}"
+    createRoute53Record: true
+provider:
+  name: aws
+  runtime: nodejs12.x
+  region: ap-south-1
+
+  # These environment variables are made available to our functions
+  # under process.env.
+  environment:
+    DYNAMODB_TABLE: zip-${opt:stage, self:provider.stage}
+    endpoint: https://dynamodb.ap-south-1.amazonaws.com
+    freeshippingamount: 1500
+
+  # 'iamRoleStatements' defines the permission policy for the Lambda function.
+  # In this case Lambda functions are granted with permissions to access DynamoDB.
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:DescribeTable
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      # Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"
+      Resource: ["arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}", "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}/index/*"]
+
+functions:
+
+  shippingdetails:
+    handler: controllers/postofficeController.getPost
+    events:
+      - http:
+          path: /postoffice
+          method: get
+          cors: true
+          # authorizer: aws_iam
+          query:
+            pinCode: false
+            state: false
+            city: false
+      # - alb:
+      #   listenerArn: arn:aws:elasticloadbalancing:ap-south-1:649096658356:loadbalancer/app/ekatva-in-alb/ac682d3a2506c776
+      #   priority: 1
+      #   conditions:
+      #     path: /v1/api/postoffice
+      #     method:
+      #         - GET
+  addpostoffice:
+    handler: controllers/postofficeController.insertPostoffice
+    events:
+      - http:
+          path: /addpostoffice
+          method: post
+          cors: true
+          # authorizer: aws_iam
+      # - alb:
+      #   listenerArn: arn:aws:elasticloadbalancing:ap-south-1:649096658356:loadbalancer/app/ekatva-in-alb/ac682d3a2506c776
+      #   priority: 1
+      #   conditions:
+      #     path: /v1/api/addpostoffice
+      #     method:
+      #         - POST
+
+resources:
+  Resources:
+    customertable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+          - AttributeName: Pincode
+            AttributeType: S
+          - AttributeName: Postoffice
+            AttributeType: S
+          # - AttributeName: District
+          #   AttributeType: S
+          # - AttributeName: Postoffice
+          #   AttributeType: S
+          # - AttributeName: StateName
+          #   AttributeType: S
+          # - AttributeName: Serviceable
+          #   AttributeType: S
+          # - AttributeName: Serviceablearea
+          #   AttributeType: S
+          # - AttributeName: Servicecode
+          #   AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+          - AttributeName: Pincode
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
+        # ProvisionedThroughput:
+        #       ReadCapacityUnits: 5
+        #       WriteCapacityUnits: 5
+        TableName: ${self:provider.environment.DYNAMODB_TABLE}
+        GlobalSecondaryIndexes:
+          - IndexName: pinindex
+            KeySchema:
+            - AttributeName: Pincode
+              KeyType: HASH
+            - AttributeName: Postoffice
+              KeyType: RANGE
+            Projection:
+              NonKeyAttributes:
+                - StateName
+                - District
+                - Serviceable
+                - Servicearea
+                - Servicecode
+                - Codeligible
+                - Shippingrate
+              ProjectionType: INCLUDE
+            # ProvisionedThroughput:
+            #   ReadCapacityUnits: 5
+            #   WriteCapacityUnits: 5
+

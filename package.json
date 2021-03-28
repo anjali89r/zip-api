@@ -1,0 +1,20 @@
+{
+  "name": "zip-service",
+  "version": "1.0.0",
+  "description": "Zip service for Ekatva",
+  "main": "handler.js",
+  "scripts": {
+    "test": "serverless-bundle test"
+  },
+  "devDependencies": {
+    "aws-sdk": "^2.683.0",
+    "serverless-domain-manager": "^4.1.0",
+    "serverless-bundle": "^1.6.0",
+    "serverless-dynamodb-local": "^0.2.39",
+    "csvtojson": "^2.0.10"
+  },
+  "dependencies": {
+    "serverless-offline": "^6.3.0",
+    "uuid": "^3.4.0"
+  }
+}
