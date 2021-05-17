@@ -1,4 +1,9 @@
-import { creation, success, failure, invalidrequest } from "../libs/response-lib";
+import {
+  creation,
+  success,
+  failure,
+  invalidrequest,
+} from "../libs/responseLib";
 
 import * as postoffice from "../models/postofficeModel.js";
 
@@ -13,7 +18,7 @@ export async function insertPostoffice(event, context) {
 
   try {
     let response = await postoffice.createrecord(data);
-    console.log("Zip details ",response);
+    console.log("Zip details ", response);
     if (response) {
       return creation({ status: "Zip Details Successfully inserted" });
     } else {
@@ -27,40 +32,56 @@ export async function insertPostoffice(event, context) {
 
 export async function getPost(event, context) {
   let query = event.queryStringParameters;
-  console.log('query parameter', query);
-  if (query === null)
-  {
-    console.error("Validation Failed ",query);
+  console.log("query parameter", query);
+  if (query === null) {
+    console.error("Validation Failed ", query);
 
-    return invalidrequest({ status: "Query parameter is mandatory for the Request" });
+    return invalidrequest({
+      status: "Query parameter is mandatory for the Request",
+    });
   }
-  let pinCode= query.pinCode;
+  let pinCode = query.pinCode;
   let cartamount = parseInt(query.amount);
   // let state=query.state;
   // let city=query.city;
   console.log(typeof pinCode);
-  if (typeof pinCode !== "string" ) {
+  if (typeof pinCode !== "string") {
     console.error("Validation Failed");
 
-    return invalidrequest({ status: "Query parameter is mandatory for the Request" });
+    return invalidrequest({
+      status: "Query parameter is mandatory for the Request",
+    });
   }
- if (!cartamount || cartamount === 0)
- {
-  cartamount = 0;
- }
-  try{
-    let response = await postoffice.getpostoffice(pinCode,cartamount);
+  if (!cartamount || cartamount === 0) {
+    cartamount = 0;
+  }
+  try {
+    let response = await postoffice.getpostoffice(pinCode, cartamount);
 
     if (response) {
-      return success( response );
+      return success(response);
     } else {
       return failure({ status: "Exception in getting the zip" });
     }
-  }catch(ex)
-  {
+  } catch (ex) {
     console.log("Exception in reteriving the order details from db ", ex);
     return failure({ status: "Exception in reteriving the order details" });
   }
+}
 
+export async function getShippingcharges(event, context) {
+  const data = JSON.parse(event.body);
+  console.log(data);
+  try {
+    let response = await postoffice.getShippingcost(data);
 
+    if (response) {
+      return success(response);
+    } else {
+      return failure({ status: "Exception in getting the zip" });
+    }
+  } catch (ex) {
+    console.log("Exception in reteriving the order details from db ", ex);
+    return failure({ status: "Exception in reteriving the order details" });
+  }
 }
