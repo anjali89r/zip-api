@@ -79,4 +79,3 @@ jobs:
             1) Rewrote shipping api to support COD and International Shippinh APIs
             2) New table structure
             3) Additional apis to update the shipping details to DB and interact with Order Management
-           
