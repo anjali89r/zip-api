@@ -11,34 +11,16 @@ export function invalidrequest(body) {
 export function creation(body) {
   return buildResponse(201, body);
 }
-
 function buildResponse(statusCode, body) {
-  // let description;
-  console.log(statusCode);
-  // switch (statusCode) {
-  //   case 200:
-  //     description = "200 OK";
-  //     break;
-  //   case 201:
-  //     description = "201 Created";
-  //     break;
-  //   case 400:
-  //     description = "400 Bad Request";
-  //     break;
-  //   case 500:
-  //     description = "500 Internal Server Error";
-  //     break;
-
-  // }
   let respfinal = {
     statusCode: statusCode,
+
     headers: {
-      "Set-cookie": "cookies",
       "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Origin": process.env.cors_hostname,
     },
     body: JSON.stringify(body),
   };
-  console.log(respfinal);
+  // console.log(respfinal);
   return respfinal;
 }

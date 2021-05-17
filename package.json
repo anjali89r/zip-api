@@ -4,17 +4,22 @@
   "description": "Zip service for Ekatva",
   "main": "handler.js",
   "scripts": {
-    "test": "serverless-bundle test"
+    "test": "serverless-bundle test",
+    "dev": "AWS_PROFILE=ekatva serverless offline start --disableCookieValidation --stage dev",
+    "prod": "AWS_PROFILE=ekatva serverless offline start --disableCookieValidation --stage prod"
   },
   "devDependencies": {
-    "aws-sdk": "^2.683.0",
-    "serverless-domain-manager": "^4.1.0",
-    "serverless-bundle": "^1.6.0",
-    "serverless-dynamodb-local": "^0.2.39",
-    "csvtojson": "^2.0.10"
+    "aws-sdk": "2.874.0",
+    "serverless-domain-manager": "5.1.0",
+    "serverless-bundle": "4.2.2",
+    "serverless-dynamodb-local": "0.2.39",
+    "csvtojson": "^2.0.10",
+    "serverless": "^1.83.2",
+    "serverless-offline": "6.9.0",
+    "serverless-dotenv-plugin": "3.9.0"
   },
   "dependencies": {
-    "serverless-offline": "^6.3.0",
-    "uuid": "^3.4.0"
+    "uuid": "^3.4.0",
+    "node-fetch": "2.6.1"
   }
 }

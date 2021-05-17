@@ -10,6 +10,7 @@ plugins:
   - serverless-offline
   - serverless-dynamodb-local
   - serverless-domain-manager
+  - serverless-dotenv-plugin
 custom:
   stage: ${opt:stage, self:provider.stage}
   dynamodb:
@@ -22,7 +23,9 @@ custom:
     # migration:
     #   dir: offline/migrations
   serverless-offline:
-    port: 4000
+    httpPort: 4000
+    lambdaPort: 4001
+    allowCache: true
   domains:
     prod: api.ekatvacollections.com
     staging: staging-api.ekatvacollections.com
@@ -36,16 +39,6 @@ provider:
   name: aws
   runtime: nodejs12.x
   region: ap-south-1
-
-  # These environment variables are made available to our functions
-  # under process.env.
-  environment:
-    DYNAMODB_TABLE: zip-${opt:stage, self:provider.stage}
-    endpoint: https://dynamodb.ap-south-1.amazonaws.com
-    freeshippingamount: 1500
-
-  # 'iamRoleStatements' defines the permission policy for the Lambda function.
-  # In this case Lambda functions are granted with permissions to access DynamoDB.
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -56,9 +49,12 @@ provider:
         - dynamodb:PutItem
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
-      # Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"
       Resource: ["arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}", "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}/index/*"]
 
+    - Effect: Allow
+      Action:
+        - secretsmanager:GetSecretValue
+      Resource: ["arn:aws:secretsmanager:ap-south-1:267910336395:secret:ekatva-delhivery-tokens-p8ch8y"]
 functions:
 
   shippingdetails:
@@ -73,29 +69,32 @@ functions:
             pinCode: false
             state: false
             city: false
-      # - alb:
-      #   listenerArn: arn:aws:elasticloadbalancing:ap-south-1:649096658356:loadbalancer/app/ekatva-in-alb/ac682d3a2506c776
-      #   priority: 1
-      #   conditions:
-      #     path: /v1/api/postoffice
-      #     method:
-      #         - GET
+
   addpostoffice:
+    description: API to add India new post office details to DB 
+    memorySize: 512 # memorySize for this specific function.
     handler: controllers/postofficeController.insertPostoffice
     events:
       - http:
-          path: /addpostoffice
+          path: /postoffice
           method: post
           cors: true
-          # authorizer: aws_iam
-      # - alb:
-      #   listenerArn: arn:aws:elasticloadbalancing:ap-south-1:649096658356:loadbalancer/app/ekatva-in-alb/ac682d3a2506c776
-      #   priority: 1
-      #   conditions:
-      #     path: /v1/api/addpostoffice
-      #     method:
-      #         - POST
+          authorizer:
+            arn: arn:aws:cognito-idp:ap-south-1:267910336395:userpool/ap-south-1_5Gd00JfQ2
 
+  shippingcharge:
+    handler: controllers/postofficeController.getShippingcharges
+    events:
+      - http:
+          path: /shipping
+          method: post
+          cors: true
+          request: # configure method request and integration request settings
+            schema: # Optional request schema validation; mapped by content type
+              application/json: ${file(./schema/shipping.json)} # define the valid JSON Schema for a content-type
+            passThrough: NEVER
+          # authorizer: aws_iam
+              
 resources:
   Resources:
     customertable:
@@ -103,52 +102,38 @@ resources:
       DeletionPolicy: Retain
       Properties:
         AttributeDefinitions:
-          - AttributeName: id
+          - AttributeName: PK
             AttributeType: S
-          - AttributeName: Pincode
-            AttributeType: S
-          - AttributeName: Postoffice
-            AttributeType: S
-          # - AttributeName: District
-          #   AttributeType: S
-          # - AttributeName: Postoffice
-          #   AttributeType: S
-          # - AttributeName: StateName
-          #   AttributeType: S
-          # - AttributeName: Serviceable
-          #   AttributeType: S
-          # - AttributeName: Serviceablearea
-          #   AttributeType: S
-          # - AttributeName: Servicecode
-          #   AttributeType: S
+          - AttributeName: SK
+            AttributeType: N
         KeySchema:
-          - AttributeName: id
+          - AttributeName: PK
             KeyType: HASH
-          - AttributeName: Pincode
+          - AttributeName: SK
             KeyType: RANGE
         BillingMode: PAY_PER_REQUEST
         # ProvisionedThroughput:
         #       ReadCapacityUnits: 5
         #       WriteCapacityUnits: 5
         TableName: ${self:provider.environment.DYNAMODB_TABLE}
-        GlobalSecondaryIndexes:
-          - IndexName: pinindex
-            KeySchema:
-            - AttributeName: Pincode
-              KeyType: HASH
-            - AttributeName: Postoffice
-              KeyType: RANGE
-            Projection:
-              NonKeyAttributes:
-                - StateName
-                - District
-                - Serviceable
-                - Servicearea
-                - Servicecode
-                - Codeligible
-                - Shippingrate
-              ProjectionType: INCLUDE
-            # ProvisionedThroughput:
-            #   ReadCapacityUnits: 5
-            #   WriteCapacityUnits: 5
+        # GlobalSecondaryIndexes:
+        #   - IndexName: pinindex
+        #     KeySchema:
+        #     - AttributeName: Pincode
+        #       KeyType: HASH
+        #     - AttributeName: Postoffice
+        #       KeyType: RANGE
+        #     Projection:
+        #       NonKeyAttributes:
+        #         - StateName
+        #         - District
+        #         - Serviceable
+        #         - Servicearea
+        #         - Servicecode
+        #         - Codeligible
+        #         - Shippingrate
+        #       ProjectionType: INCLUDE
+        #     # ProvisionedThroughput:
+        #     #   ReadCapacityUnits: 5
+        #     #   WriteCapacityUnits: 5
 
