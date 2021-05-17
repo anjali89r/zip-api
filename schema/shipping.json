@@ -21,23 +21,21 @@
     "categoryDetails": {
       "type": "array",
       "title": "List of item categories and count",
-      "items": { "$ref": "#/$defs/category" }
-    }
-  },
-  "$defs": {
-    "category": {
-      "type": "object",
-      "properties": {
-        "category": {
-          "type": "string",
-          "description": "The item category value"
-        },
-        "count": {
-          "type": "number",
-          "description": "The item count selected by customer",
-          "minimum": 1
+      "items": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string",
+            "description": "The item category value"
+          },
+          "count": {
+            "type": "number",
+            "description": "The item count selected by customer",
+            "minimum": 1
+          }
         }
       }
     }
   }
 }
+  
