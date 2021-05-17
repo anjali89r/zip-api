@@ -60,7 +60,7 @@ jobs:
           collection: ./tests/integration/zip-api.postman_collection.json
           environment: ./tests/integration/ekatva-prod.postman_environment.json
           folder: public-api
-        reporters: cli
+          reporters: cli
 
       - name: Postman Test Output summary
         run: echo ${{ steps.run-newman.outputs.summary }}
