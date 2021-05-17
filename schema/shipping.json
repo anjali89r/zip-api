@@ -15,7 +15,7 @@
     },
     "cartAmount": {
       "type": "number",
-      "title": "Max counter value that can be used for this promo code",
+      "title": "Cart Amount in the shopping cart",
       "minimum": 1
     },
     "categoryDetails": {
