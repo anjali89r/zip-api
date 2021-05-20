@@ -151,7 +151,7 @@ export async function getShippingcost(req) {
           country: req.country,
           shippingRate: shippingCost,
           discountedShippingRate:
-            req.cartAmount > 20000 ? shippingCost * 0.75 : shippingCost,
+            req.cartAmount > 20000 ? Math.round(shippingCost * 0.75) : shippingCost,
           cod: false,
         },
       ];
