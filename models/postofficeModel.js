@@ -95,7 +95,7 @@ export async function getShippingcost(req) {
         "#cod": "CoD",
         "#serviceable": "Serviceable",
         "#rate": "Rate",
-        "#country": "Country"
+        "#country": "Country",
       },
     };
     try {
@@ -140,5 +140,141 @@ export async function getShippingcost(req) {
       };
     }
   } else {
+    let shippingCost = await getInternationalShippingCost(req);
+    if (shippingCost) {
+      response = [
+        {
+          postCode: "",
+          postOffice: "",
+          district: "",
+          state: "",
+          country: req.country,
+          shippingRate: shippingCost,
+          discountedShippingRate:
+            req.cartAmount > 20000 ? shippingCost * 0.75 : shippingCost,
+          cod: false,
+        },
+      ];
+    } else {
+      response = [
+        {
+          postCode: "",
+          postOffice: "",
+          district: "",
+          state: "",
+          country: req.country,
+          shippingRate: 2500,
+          discountedShippingRate: 2500,
+          cod: false,
+        },
+      ];
+    }
+
+    return response;
+  }
+}
+
+export async function getInternationalShippingCost(req) {
+  let totalWeight = 0;
+  let fueltax = 0;
+  let gst = 0;
+  let params = {
+    TableName: process.env.DYNAMODB_TABLE,
+    ScanIndexForward: false,
+    ConsistentRead: true,
+    KeyConditionExpression: "#cd421 = :cd421",
+    ProjectionExpression: "#cd421,#cd422,#category",
+    ExpressionAttributeValues: {
+      ":cd421": "cat#itemweight",
+    },
+    ExpressionAttributeNames: {
+      "#cd421": "PK",
+      "#cd422": "SK",
+      "#category": "Category",
+    },
+  };
+  try {
+    console.log("get item weight ", params);
+    let dbresp = await dbcall("query", params);
+    if (dbresp.Items.length == 0) {
+      return false;
+    }
+    console.log(dbresp.Items);
+    req.categoryDetails.forEach((item) => {
+      let categoryItem = dbresp.Items.filter(
+        (el) => el.Category == item.category
+      );
+      totalWeight = totalWeight + categoryItem[0].SK * item.count;
+    });
+  } catch (ex) {
+    console.error("Failure in calculating the total weight ", ex);
+    return false;
+  }
+  totalWeight = totalWeight / 1000;
+  console.log("get total weight in kgs", totalWeight);
+  totalWeight = Math.round(totalWeight * 2) / 2;
+  console.log("get total weight ", totalWeight);
+  let taxParams = {
+    TableName: process.env.DYNAMODB_TABLE,
+    ScanIndexForward: false,
+    ConsistentRead: true,
+    KeyConditionExpression: "#cd421 = :cd421 and #cd422 = :cd422",
+    ProjectionExpression: "#cd421,#cd422,#fueltax,#gst",
+    ExpressionAttributeValues: {
+      ":cd421": "tax#item",
+      ":cd422": 0,
+    },
+    ExpressionAttributeNames: {
+      "#cd421": "PK",
+      "#cd422": "SK",
+      "#fueltax": "Fueltax",
+      "#gst": "GST",
+    },
+  };
+  try {
+    console.log("get tax Params ", taxParams);
+    let dbresp = await dbcall("query", taxParams);
+    console.log("res tax Params ", dbresp);
+    if (dbresp.Items.length == 0) {
+      return false;
+    }
+
+    fueltax = dbresp.Items[0].Fueltax;
+    gst = dbresp.Items[0].GST;
+    console.log("Tax values ", fueltax);
+  } catch (ex) {
+    console.error("Failure in calculating the total weight ", ex);
+    return false;
+  }
+  let shippingParams = {
+    TableName: process.env.DYNAMODB_TABLE,
+    ScanIndexForward: false,
+    ConsistentRead: true,
+    KeyConditionExpression: "#cd421 = :cd421 and #cd422 = :cd422",
+    ProjectionExpression: "#cd421,#cd422,#rate",
+    ExpressionAttributeValues: {
+      ":cd421": "c#" + req.country,
+      ":cd422": totalWeight,
+    },
+    ExpressionAttributeNames: {
+      "#cd421": "PK",
+      "#cd422": "SK",
+      "#rate": "Rate",
+    },
+  };
+  try {
+    console.log("get shipping Params ", shippingParams);
+    let dbresp = await dbcall("query", shippingParams);
+    console.log("res shipping Params ", dbresp);
+    if (dbresp.Items.length == 0) {
+      return false;
+    }
+
+    let shippingCost =
+      dbresp.Items[0].Rate + (dbresp.Items[0].Rate * (fueltax + gst)) / 100;
+    return Math.round(shippingCost);
+  } catch (ex) {
+    console.error("Failure in calculating the total weight ", ex);
+    return false;
   }
 }
