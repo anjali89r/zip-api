@@ -73,6 +73,10 @@ export async function getShippingcharges(event, context) {
   const data = JSON.parse(event.body);
   console.log(data);
   try {
+    if (data.country != "IN" && data.categoryDetails.length == 0)
+    {
+      return invalidrequest({status: "Category information is required"});
+    }
     let response = await postoffice.getShippingcost(data);
 
     if (response) {
