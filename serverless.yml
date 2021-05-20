@@ -86,7 +86,7 @@ functions:
     handler: controllers/postofficeController.getShippingcharges
     events:
       - http:
-          path: /shipping
+          path: /charge
           method: post
           cors: true
           request: # configure method request and integration request settings
