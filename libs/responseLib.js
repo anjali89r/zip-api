@@ -14,13 +14,12 @@ export function creation(body) {
 function buildResponse(statusCode, body) {
   let respfinal = {
     statusCode: statusCode,
-
     headers: {
       "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": process.env.cors_hostname,
+      "Access-Control-Allow-Origin": process.env.origin,
+      "Access-Control-Allow-Credentials": true,
     },
     body: JSON.stringify(body),
   };
-  // console.log(respfinal);
   return respfinal;
 }
