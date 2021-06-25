@@ -1,0 +1,41 @@
+{
+  "definitions": {},
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "title": "Get Shipping Charge Cost",
+  "required": ["country", "postalCode", "cartAmount"],
+  "properties": {
+    "country": {
+      "type": "string",
+      "title": "The country code value"
+    },
+    "postalCode": {
+      "type": "string",
+      "title": "The postal code or pin code or zip code"
+    },
+    "cartAmount": {
+      "type": "number",
+      "title": "Cart Amount in the shopping cart",
+      "minimum": 1
+    },
+    "categoryDetails": {
+      "type": "array",
+      "title": "List of item categories and count",
+      "items": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string",
+            "description": "The item category value"
+          },
+          "count": {
+            "type": "number",
+            "description": "The item count selected by customer",
+            "minimum": 1
+          }
+        }
+      }
+    }
+  }
+}
+  

@@ -1,0 +1,81 @@
+name: deploy
+on:
+  push:
+    branches:
+      - develop
+      - main
+#   pull_request:
+#     branches: [ develop ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [12.x]
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: npm install
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: npm install
+        run: |
+          npm install
+
+      - name: serverless deploy
+        if: github.ref == 'refs/heads/develop'
+        uses: serverless/github-action@v1.53.0
+        with:
+          args: deploy --stage dev
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.SERVERLESSACCESSKEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.SERVERLESSSECRETKEY }}
+          AWS_REGION: "ap-south-1"
+
+      - name: Integration Tests in Dev
+        if: github.ref == 'refs/heads/develop'
+        uses: anthonyvscode/newman-action@v1
+        with:
+          collection: ./tests/integration/zip-api.postman_collection.json
+          environment: ./tests/integration/ekatva-dev.postman_environment.json
+          folder: public-api
+          reporters: cli
+
+      - name: serverless deploy
+        if: github.ref == 'refs/heads/master'
+        uses: serverless/github-action@v1.53.0
+        with:
+          args: deploy --stage prod
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.SERVERLESSACCESSKEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.SERVERLESSSECRETKEY }}
+          AWS_REGION: "ap-south-1"
+
+      - name: Integration Tests in Prod
+        if: github.ref == 'refs/heads/master'
+        uses: anthonyvscode/newman-action@v1
+        with:
+          collection: ./tests/integration/zip-api.postman_collection.json
+          environment: ./tests/integration/ekatva-prod.postman_environment.json
+          folder: public-api
+          reporters: cli
+
+      - name: Postman Test Output summary
+        run: echo ${{ steps.run-newman.outputs.summary }}
+
+      - name: Create a Release
+        if: github.ref == 'refs/heads/master'
+        uses: actions/create-release@v1.1.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # The name of the tag. This should come from the webhook payload, `github.GITHUB_REF` when a user pushes a new tag
+          tag_name: 1.0.1
+          # The name of the release. For example, `Release v1.0.1`
+          release_name: COD and International Shipping APIs
+          body: |
+            1) Rewrote shipping api to support COD and International Shippinh APIs
+            2) New table structure
+            3) Additional apis to update the shipping details to DB and interact with Order Management
