@@ -102,7 +102,7 @@ export async function getShippingcost(req) {
       let dbresp = await dbcall("query", params);
       if (req.cartAmount >= process.env.freeshippingamount) {
         dbresp.Items.map((element) => {
-          element.Shippingrate = 0;
+          element.shippingRate = "0";
         });
       }
       console.log(dbresp);
@@ -127,7 +127,9 @@ export async function getShippingcost(req) {
             state: row.State,
             country: row.Country,
             shippingRate: row.Rate,
-            discountedShippingRate: row.Rate,
+            discountedShippingRate: row.shippingRate
+              ? row.shippingRate
+              : row.Rate,
             cod: row.CoD,
           };
         });
@@ -151,7 +153,9 @@ export async function getShippingcost(req) {
           country: req.country,
           shippingRate: shippingCost,
           discountedShippingRate:
-            req.cartAmount > 20000 ? Math.round(shippingCost * 0.75) : shippingCost,
+            req.cartAmount > 20000
+              ? Math.round(shippingCost * 0.75)
+              : shippingCost,
           cod: false,
         },
       ];
