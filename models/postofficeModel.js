@@ -208,7 +208,9 @@ export async function getInternationalShippingCost(req) {
       let categoryItem = dbresp.Items.filter(
         (el) => el.Category == item.category
       );
-      totalWeight = totalWeight + categoryItem[0].SK * item.count;
+      if (categoryItem.length > 0) {
+        totalWeight = totalWeight + categoryItem[0].SK * item.count;
+      }
     });
   } catch (ex) {
     console.error("Failure in calculating the total weight ", ex);
