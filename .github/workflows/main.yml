@@ -72,11 +72,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           # The name of the tag. This should come from the webhook payload, `github.GITHUB_REF` when a user pushes a new tag
-          tag_name: 1.0.1
+          tag_name: 1.0.2
           # The name of the release. For example, `Release v1.0.1`
-          release_name: COD and International Shipping APIs
+          release_name: Defect Fix when the category is not available on DB
           body: |
-            1) Rewrote shipping api to support COD and International Shippinh APIs
-            2) New table structure
-            3) Additional apis to update the shipping details to DB and interact with Order Management
-            4) Fixed Free Shipping Amount Issue for India
+            1) Fixed the weight calculation when the category is not available on DB
