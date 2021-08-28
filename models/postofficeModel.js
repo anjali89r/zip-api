@@ -105,16 +105,20 @@ export async function getShippingcost(req) {
           element.shippingRate = "0";
         });
       }
-      console.log(dbresp);
       if (dbresp.Items.length > 0) {
         let delhiveryresp = await checkPinCodeServiceability(
           req.postalCode,
           ""
         );
+        console.log("Response ", delhiveryresp);
         if (delhiveryresp != "Failed") {
           let codEligible = delhiveryresp.cod === "Y";
           dbresp.Items.map((element) => {
-            element.cod = codEligible;
+            element.CoD = codEligible;
+          });
+        } else {
+          dbresp.Items.map((element) => {
+            element.CoD = false;
           });
         }
       }

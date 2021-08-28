@@ -72,8 +72,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           # The name of the tag. This should come from the webhook payload, `github.GITHUB_REF` when a user pushes a new tag
-          tag_name: 1.0.2
+          tag_name: 1.0.3
           # The name of the release. For example, `Release v1.0.1`
-          release_name: Defect Fix when the category is not available on DB
+          release_name: Defect Fix related to COD eligiblity
           body: |
-            1) Fixed the weight calculation when the category is not available on DB
+            1) Corrected the Delhivery API check to get the COD eligiblity
