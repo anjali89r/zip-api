@@ -35,10 +35,14 @@ custom:
     basePath: shipping
     stage: "${self:custom.stage}"
     createRoute53Record: true
+  logRetentionInDays:
+    prod: 30
+    dev: 7
 provider:
   name: aws
   runtime: nodejs12.x
   region: ap-south-1
+  logRetentionInDays: ${self:custom.logRetentionInDays.${self:custom.stage}}
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -84,6 +88,8 @@ functions:
 
   shippingcharge:
     handler: controllers/postofficeController.getShippingcharges
+    description: API integrated to live website to get the shipping charges and COD eligiblity
+    memorySize: 1024 # memorySize for this specific function.
     events:
       - http:
           path: /charge
