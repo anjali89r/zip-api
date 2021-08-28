@@ -35,10 +35,14 @@ custom:
     basePath: shipping
     stage: "${self:custom.stage}"
     createRoute53Record: true
+  logRetentionInDays:
+    prod: 30
+    dev: 7
 provider:
   name: aws
   runtime: nodejs12.x
   region: ap-south-1
+  logRetentionInDays: ${self:custom.logRetentionInDays.${self:custom.stage}}
   iamRoleStatements:
     - Effect: Allow
       Action:
